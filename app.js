@@ -1,5 +1,3 @@
-const userTypes = ["Dalyvis", "VIP dalyvis", "Studentas", "Spauda"];
-
 const talks = [
   {
     id: "ai-ateitis",
@@ -57,12 +55,9 @@ const partners = [
 const slotTimes = ["10:00", "10:10", "10:20", "10:30", "12:00", "12:10", "15:00", "15:10", "15:20"];
 
 const state = {
-  currentRole: "naudotojas",
-  currentUserType: userTypes[0],
   speakerQuestions: [
     {
       talkId: "ai-ateitis",
-      askerType: "Dalyvis",
       question: "Kokį pirmą procesą rekomenduotumėte automatizuoti vidutinėje įmonėje?",
       answer: "Pradėkite nuo pasikartojančių užklausų klasifikavimo ir aiškaus sėkmės rodiklio.",
     },
@@ -70,7 +65,6 @@ const state = {
   partnerQuestions: [
     {
       partnerId: "cloudhub",
-      askerType: "VIP dalyvis",
       question: "Ar konsultuojate dėl hibridinės debesijos architektūros?",
       answer: "Taip, prie stendo turėsime architektą, kuris galės aptarti pradinį planą.",
     },
@@ -78,7 +72,6 @@ const state = {
   reservations: [
     {
       partnerId: "fintech-lab",
-      userType: "Studentas",
       start: "12:00",
       duration: 20,
       status: "Patvirtinta",
@@ -86,9 +79,6 @@ const state = {
   ],
 };
 
-const roleTabs = document.querySelectorAll(".role-tab");
-const rolePanels = document.querySelectorAll(".role-panel");
-const userTypeSelect = document.querySelector("#userTypeSelect");
 const talksList = document.querySelector("#talksList");
 const partnersList = document.querySelector("#partnersList");
 const speakerQuestions = document.querySelector("#speakerQuestions");
@@ -103,22 +93,6 @@ function findTalk(talkId) {
 
 function findPartner(partnerId) {
   return partners.find((partner) => partner.id === partnerId);
-}
-
-function switchRole(role) {
-  state.currentRole = role;
-
-  roleTabs.forEach((tab) => {
-    const isSelected = tab.dataset.role === role;
-    tab.classList.toggle("is-active", isSelected);
-    tab.setAttribute("aria-selected", String(isSelected));
-  });
-
-  rolePanels.forEach((panel) => {
-    const isVisible = panel.dataset.panel === role;
-    panel.classList.toggle("is-active", isVisible);
-    panel.hidden = !isVisible;
-  });
 }
 
 function createActivityItem({ title, meta, body, answer, actions }) {
@@ -168,7 +142,7 @@ function createAnswerForm({ label, value, submitText, onSubmit }) {
   textarea.name = "answer";
   textarea.rows = 2;
   textarea.required = true;
-  textarea.value = value.startsWith("Laukia") ? "" : value;
+  textarea.value = value === "Pranešėjas atsakys iki pranešimo arba po jo." || value === "Partneris atsakys artimiausiu metu." ? "" : value;
   textarea.placeholder = "Įrašykite atsakymą";
   field.append(textarea);
 
@@ -228,9 +202,8 @@ function renderTalks() {
       const data = new FormData(form);
       state.speakerQuestions.unshift({
         talkId: talk.id,
-        askerType: state.currentUserType,
         question: data.get("question").trim(),
-        answer: "Laukia pranešėjo atsakymo.",
+        answer: "Pranešėjas atsakys iki pranešimo arba po jo.",
       });
       form.reset();
       renderDashboards();
@@ -264,7 +237,6 @@ function renderPartners() {
       const data = new FormData(reservationForm);
       state.reservations.unshift({
         partnerId: partner.id,
-        userType: state.currentUserType,
         start: data.get("start"),
         duration: Number(data.get("duration")),
         status: "Laukia partnerio atsakymo",
@@ -278,9 +250,8 @@ function renderPartners() {
       const data = new FormData(questionForm);
       state.partnerQuestions.unshift({
         partnerId: partner.id,
-        askerType: state.currentUserType,
         question: data.get("question").trim(),
-        answer: "Laukia partnerio atsakymo.",
+        answer: "Partneris atsakys artimiausiu metu.",
       });
       questionForm.reset();
       renderDashboards();
@@ -295,8 +266,8 @@ function renderSpeakerQuestions() {
     const talk = findTalk(item.talkId);
     return createActivityItem({
       title: item.question,
-      meta: ["Klausia: " + item.askerType, talk.title, talk.speaker, talk.time],
-      body: "Tai pranešėjo aplinka: klausimą uždavė naudotojas, o atsako pranešėjas.",
+      meta: [talk.title, talk.speaker, talk.time],
+      body: "Pranešėjas mato klausimą ir gali atsakyti iki arba po pranešimo.",
       answer: item.answer,
       actions: createAnswerForm({
         label: "Pranešėjo atsakymas",
@@ -320,8 +291,8 @@ function renderPartnerRequests() {
     items.push(
       createActivityItem({
         title: `${partner.name}: rezervacija ${reservation.start}`,
-        meta: ["Rezervavo: " + reservation.userType, partner.stand, `${reservation.duration} min.`, reservation.status],
-        body: "Tai partnerio aplinka: laiką rezervavo naudotojas, o partneris atsako į rezervaciją.",
+        meta: [partner.stand, `${reservation.duration} min.`, reservation.status],
+        body: "Partneris gali patvirtinti laiką, pasiūlyti kitą laiką arba atmesti rezervaciją.",
         actions: createReservationActions(reservation),
       }),
     );
@@ -332,8 +303,8 @@ function renderPartnerRequests() {
     items.push(
       createActivityItem({
         title: question.question,
-        meta: ["Klausia: " + question.askerType, partner.name, partner.stand],
-        body: "Tai partnerio aplinka: klausimą uždavė naudotojas, o atsako partneris.",
+        meta: [partner.name, partner.stand],
+        body: "Partneris mato klausimą ir gali atsakyti konferencijos platformoje.",
         answer: question.answer,
         actions: createAnswerForm({
           label: "Partnerio atsakymas",
@@ -352,36 +323,28 @@ function renderPartnerRequests() {
 }
 
 function renderModeratorFeed() {
-  const speakerItems = state.speakerQuestions.map((item) => {
-    const talk = findTalk(item.talkId);
-    return createActivityItem({
-      title: item.question,
-      meta: ["Pranešėjui", "Klausia: " + item.askerType, talk.speaker, talk.title],
-      body: "Moderatorius mato naudotojo klausimą pranešėjui ir pranešėjo atsakymą.",
-      answer: item.answer,
-    });
-  });
+  const items = [
+    ...state.speakerQuestions.map((item) => {
+      const talk = findTalk(item.talkId);
+      return createActivityItem({
+        title: item.question,
+        meta: ["Pranešėjui", talk.speaker, talk.title],
+        body: "Moderatorius mato klausimą ir atsakymą.",
+        answer: item.answer,
+      });
+    }),
+    ...state.partnerQuestions.map((item) => {
+      const partner = findPartner(item.partnerId);
+      return createActivityItem({
+        title: item.question,
+        meta: ["Partneriui", partner.name],
+        body: "Moderatorius mato partneriui užduotą klausimą ir atsakymą.",
+        answer: item.answer,
+      });
+    }),
+  ];
 
-  const partnerQuestionItems = state.partnerQuestions.map((item) => {
-    const partner = findPartner(item.partnerId);
-    return createActivityItem({
-      title: item.question,
-      meta: ["Partneriui", "Klausia: " + item.askerType, partner.name],
-      body: "Moderatorius mato naudotojo klausimą partneriui ir partnerio atsakymą.",
-      answer: item.answer,
-    });
-  });
-
-  const reservationItems = state.reservations.map((reservation) => {
-    const partner = findPartner(reservation.partnerId);
-    return createActivityItem({
-      title: `${partner.name}: rezervacija ${reservation.start}`,
-      meta: ["Rezervacija", "Rezervavo: " + reservation.userType, `${reservation.duration} min.`, reservation.status],
-      body: "Moderatorius mato naudotojo rezervaciją ir partnerio sprendimą.",
-    });
-  });
-
-  moderatorFeed.replaceChildren(...speakerItems, ...partnerQuestionItems, ...reservationItems);
+  moderatorFeed.replaceChildren(...items);
 }
 
 function renderDashboards() {
@@ -390,15 +353,6 @@ function renderDashboards() {
   renderModeratorFeed();
 }
 
-roleTabs.forEach((tab) => {
-  tab.addEventListener("click", () => switchRole(tab.dataset.role));
-});
-
-userTypeSelect.addEventListener("change", (event) => {
-  state.currentUserType = event.target.value;
-});
-
 renderTalks();
 renderPartners();
 renderDashboards();
-switchRole(state.currentRole);
