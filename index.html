@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Konferencijos programa</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="topbar" aria-label="Pagrindinė navigacija">
+        <a class="brand" href="#naudotojas">Konferencija 2026</a>
+        <div class="nav-links" role="tablist" aria-label="Pasirinkite naudotojo aplinką">
+          <button class="role-tab is-active" type="button" role="tab" aria-selected="true" data-role="naudotojas">
+            Naudotojas
+          </button>
+          <button class="role-tab" type="button" role="tab" aria-selected="false" data-role="pranesejas">
+            Pranešėjas
+          </button>
+          <button class="role-tab" type="button" role="tab" aria-selected="false" data-role="partneris">
+            Partneris
+          </button>
+          <button class="role-tab" type="button" role="tab" aria-selected="false" data-role="moderatorius">
+            Moderatorius
+          </button>
+        </div>
+      </nav>
+      <section class="hero-content">
+        <p class="eyebrow">4 atskiros aplinkos</p>
+        <h1>Konferencijos platforma pagal naudotojo rolę.</h1>
+        <p>
+          Naudotojas klausia ir rezervuoja laiką. Pranešėjas atsako į pranešimo klausimus.
+          Partneris atsako į rezervacijas ir partnerio klausimus. Moderatorius mato bendrą vaizdą.
+        </p>
+      </section>
+    </header>
+
+    <main>
+      <section class="role-panel is-active" id="naudotojas" data-panel="naudotojas" aria-labelledby="naudotojas-title">
+        <div class="section role-intro">
+          <p class="eyebrow">Naudotojo aplinka</p>
+          <h2 id="naudotojas-title">Programa, partneriai, klausimai ir rezervacijos</h2>
+          <p>
+            Šioje aplinkoje dalyvis mato konferencijos programą, pranešimų aprašymus, partnerius ir
+            jų stendus. Jis gali užduoti klausimus arba rezervuoti 10 minučių laiko fragmentus.
+          </p>
+          <label class="user-type-picker">
+            Naudotojo tipas
+            <select id="userTypeSelect">
+              <option value="Dalyvis">Dalyvis</option>
+              <option value="VIP dalyvis">VIP dalyvis</option>
+              <option value="Studentas">Studentas</option>
+              <option value="Spauda">Spauda</option>
+            </select>
+          </label>
+        </div>
+
+        <section class="section" id="programa">
+          <div class="section-heading">
+            <p class="eyebrow">Programa</p>
+            <h2>Pranešimai ir klausimai pranešėjams</h2>
+            <p>
+              Pasirinkite pranešimą, perskaitykite aprašymą ir užduokite klausimą pranešėjui prieš
+              pranešimą arba po jo.
+            </p>
+          </div>
+          <div class="grid cards" id="talksList" aria-live="polite"></div>
+        </section>
+
+        <section class="section muted" id="partneriai">
+          <div class="section-heading">
+            <p class="eyebrow">Partneriai</p>
+            <h2>Stendai, klausimai ir 10 minučių rezervacijos</h2>
+            <p>
+              Matykite, kurie partneriai turi stendus konferencijoje, užduokite klausimą arba
+              rezervuokite vieną ar kelis 10 minučių laiko fragmentus susitikimui.
+            </p>
+          </div>
+          <div class="grid cards" id="partnersList" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section class="role-panel" id="pranesejas" data-panel="pranesejas" aria-labelledby="pranesejas-title" hidden>
+        <div class="section dashboard">
+          <div class="section-heading">
+            <p class="eyebrow">Pranešėjo aplinka</p>
+            <h2 id="pranesejas-title">Klausimai pranešėjui</h2>
+            <p>
+              Čia pranešėjas mato tik jam skirtus klausimus ir gali atsakyti iki pranešimo arba po jo.
+            </p>
+          </div>
+          <div id="speakerQuestions" class="activity-list"></div>
+        </div>
+      </section>
+
+      <section class="role-panel" id="partneris" data-panel="partneris" aria-labelledby="partneris-title" hidden>
+        <div class="section dashboard">
+          <div class="section-heading">
+            <p class="eyebrow">Partnerio aplinka</p>
+            <h2 id="partneris-title">Rezervacijos ir klausimai partneriui</h2>
+            <p>
+              Čia partneris mato lankytojų rezervacijas, gali jas patvirtinti arba pasiūlyti kitą laiką,
+              taip pat atsakyti į partneriui užduotus klausimus.
+            </p>
+          </div>
+          <div id="partnerRequests" class="activity-list"></div>
+        </div>
+      </section>
+
+      <section class="role-panel" id="moderatorius" data-panel="moderatorius" aria-labelledby="moderatorius-title" hidden>
+        <div class="section moderator">
+          <div class="section-heading">
+            <p class="eyebrow">Moderatoriaus aplinka</p>
+            <h2 id="moderatorius-title">Visi klausimai, atsakymai ir rezervacijos</h2>
+            <p>
+              Moderatorius nėra klausėjas ar atsakytojas. Jis prižiūri bendrą komunikaciją ir mato viską vienoje vietoje.
+            </p>
+          </div>
+          <div id="moderatorFeed" class="activity-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <template id="talkCardTemplate">
+      <article class="card">
+        <div class="card-header">
+          <span class="badge time"></span>
+          <span class="badge room"></span>
+        </div>
+        <h3></h3>
+        <p class="speaker"></p>
+        <p class="description"></p>
+        <form class="question-form">
+          <label>
+            Klausimas pranešėjui
+            <textarea name="question" rows="3" required placeholder="Įrašykite savo klausimą"></textarea>
+          </label>
+          <button type="submit">Užduoti klausimą</button>
+        </form>
+      </article>
+    </template>
+
+    <template id="partnerCardTemplate">
+      <article class="card partner-card">
+        <div class="card-header">
+          <span class="badge stand"></span>
+          <span class="badge status"></span>
+        </div>
+        <h3></h3>
+        <p class="description"></p>
+        <form class="reservation-form">
+          <div class="form-row">
+            <label>
+              Pradžios laikas
+              <select name="start" required></select>
+            </label>
+            <label>
+              Trukmė
+              <select name="duration" required>
+                <option value="10">10 min.</option>
+                <option value="20">20 min.</option>
+                <option value="30">30 min.</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">Rezervuoti laiką</button>
+        </form>
+        <form class="question-form">
+          <label>
+            Klausimas partneriui
+            <textarea name="question" rows="3" required placeholder="Paklauskite apie sprendimus, kainodarą ar partnerystę"></textarea>
+          </label>
+          <button type="submit">Užduoti klausimą</button>
+        </form>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
