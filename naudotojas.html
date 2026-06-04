@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Naudotojo aplinka</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-role="naudotojas">
+    <header class="hero">
+      <nav class="topbar" aria-label="Pagrindinė navigacija">
+        <a class="brand" href="index.html">Konferencija 2026</a>
+        <div class="nav-links">
+          <a class="role-link is-active" href="naudotojas.html">Naudotojas</a>
+          <a class="role-link" href="pranesejas.html">Pranešėjas</a>
+          <a class="role-link" href="partneris.html">Partneris</a>
+          <a class="role-link" href="moderatorius.html">Moderatorius</a>
+        </div>
+      </nav>
+      <section class="hero-content">
+        <p class="eyebrow">Naudotojo aplinka</p>
+        <h1>Programa, partneriai, klausimai ir rezervacijos.</h1>
+        <p>
+          Šiame puslapyje dalyvis gali tik klausti ir rezervuoti. Atsakymo funkcijos yra kituose naudotojų puslapiuose.
+        </p>
+      </section>
+    </header>
+
+    <main>
+      <section class="section role-intro">
+        <p class="eyebrow">Naudotojo tipas</p>
+        <h2>Pasirinkite, kas klausia arba rezervuoja</h2>
+        <label class="user-type-picker">
+          Naudotojo tipas
+          <select id="userTypeSelect">
+            <option value="Dalyvis">Dalyvis</option>
+            <option value="VIP dalyvis">VIP dalyvis</option>
+            <option value="Studentas">Studentas</option>
+            <option value="Spauda">Spauda</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="section" id="programa">
+        <div class="section-heading">
+          <p class="eyebrow">Programa</p>
+          <h2>Pranešimai ir klausimai pranešėjams</h2>
+          <p>Pasirinkite pranešimą, perskaitykite aprašymą ir užduokite klausimą pranešėjui.</p>
+        </div>
+        <div class="grid cards" id="talksList" aria-live="polite"></div>
+      </section>
+
+      <section class="section muted" id="partneriai">
+        <div class="section-heading">
+          <p class="eyebrow">Partneriai</p>
+          <h2>Stendai, klausimai ir 10 minučių rezervacijos</h2>
+          <p>Rezervuokite vieną ar kelis 10 minučių laiko fragmentus arba užduokite klausimą partneriui.</p>
+        </div>
+        <div class="grid cards" id="partnersList" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <template id="talkCardTemplate">
+      <article class="card">
+        <div class="card-header">
+          <span class="badge time"></span>
+          <span class="badge room"></span>
+        </div>
+        <h3></h3>
+        <p class="speaker"></p>
+        <p class="description"></p>
+        <form class="question-form">
+          <label>
+            Klausimas pranešėjui
+            <textarea name="question" rows="3" required placeholder="Įrašykite savo klausimą"></textarea>
+          </label>
+          <button type="submit">Užduoti klausimą</button>
+        </form>
+      </article>
+    </template>
+
+    <template id="partnerCardTemplate">
+      <article class="card partner-card">
+        <div class="card-header">
+          <span class="badge stand"></span>
+          <span class="badge status"></span>
+        </div>
+        <h3></h3>
+        <p class="description"></p>
+        <form class="reservation-form">
+          <div class="form-row">
+            <label>
+              Pradžios laikas
+              <select name="start" required></select>
+            </label>
+            <label>
+              Trukmė
+              <select name="duration" required>
+                <option value="10">10 min.</option>
+                <option value="20">20 min.</option>
+                <option value="30">30 min.</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">Rezervuoti laiką</button>
+        </form>
+        <form class="question-form">
+          <label>
+            Klausimas partneriui
+            <textarea name="question" rows="3" required placeholder="Paklauskite apie sprendimus, kainodarą ar partnerystę"></textarea>
+          </label>
+          <button type="submit">Užduoti klausimą</button>
+        </form>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
