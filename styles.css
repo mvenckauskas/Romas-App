@@ -264,8 +264,7 @@ button:focus-visible {
 @media (max-width: 680px) {
   .topbar,
   .nav-links,
-  .form-row,
-  .reservation-actions {
+  .form-row {
     align-items: stretch;
     flex-direction: column;
   }
@@ -295,97 +294,4 @@ button:focus-visible {
 .secondary-button:hover,
 .secondary-button:focus-visible {
   background: #d7e8ff;
-}
-
-.role-tab {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  color: #fff;
-  padding: 0.5rem 0.8rem;
-}
-
-.role-tab:hover,
-.role-tab:focus-visible,
-.role-tab.is-active {
-  background: #fff;
-  color: var(--primary-dark);
-}
-
-.role-panel[hidden] {
-  display: none;
-}
-
-.role-intro {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 2rem;
-  box-shadow: var(--shadow);
-  margin-top: -2rem;
-}
-
-.role-intro h2 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  line-height: 1.1;
-  margin: 0.35rem 0 0.75rem;
-}
-
-.role-intro > p:not(.eyebrow) {
-  color: var(--muted);
-  max-width: 760px;
-}
-
-.user-type-picker {
-  background: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  margin-top: 1.25rem;
-  max-width: 360px;
-  padding: 1rem;
-}
-
-.compact-hero {
-  padding-bottom: 3.5rem;
-}
-
-.role-link {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  color: #fff;
-  display: inline-flex;
-  font-weight: 800;
-  padding: 0.5rem 0.8rem;
-}
-
-.role-link:hover,
-.role-link:focus-visible,
-.role-link.is-active {
-  background: #fff;
-  color: var(--primary-dark);
-  outline: none;
-}
-
-.role-choice {
-  color: inherit;
-  display: block;
-  min-height: 220px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.role-choice:hover,
-.role-choice:focus-visible {
-  box-shadow: 0 24px 55px rgba(23, 32, 51, 0.14);
-  outline: none;
-  transform: translateY(-4px);
-}
-
-.role-choice h2 {
-  font-size: 1.55rem;
-  line-height: 1.15;
-  margin: 1rem 0 0.6rem;
-}
-
-.role-choice p {
-  color: var(--muted);
 }

@@ -1,5 +1,3 @@
-const userTypes = ["Dalyvis", "VIP dalyvis", "Studentas", "Spauda"];
-
 const talks = [
   {
     id: "ai-ateitis",
@@ -55,15 +53,11 @@ const partners = [
 ];
 
 const slotTimes = ["10:00", "10:10", "10:20", "10:30", "12:00", "12:10", "15:00", "15:10", "15:20"];
-const storageKey = "conferenceStateV2";
-const pageRole = document.body.dataset.role;
 
-const defaultState = {
-  currentUserType: userTypes[0],
+const state = {
   speakerQuestions: [
     {
       talkId: "ai-ateitis",
-      askerType: "Dalyvis",
       question: "Kokį pirmą procesą rekomenduotumėte automatizuoti vidutinėje įmonėje?",
       answer: "Pradėkite nuo pasikartojančių užklausų klasifikavimo ir aiškaus sėkmės rodiklio.",
     },
@@ -71,7 +65,6 @@ const defaultState = {
   partnerQuestions: [
     {
       partnerId: "cloudhub",
-      askerType: "VIP dalyvis",
       question: "Ar konsultuojate dėl hibridinės debesijos architektūros?",
       answer: "Taip, prie stendo turėsime architektą, kuris galės aptarti pradinį planą.",
     },
@@ -79,7 +72,6 @@ const defaultState = {
   reservations: [
     {
       partnerId: "fintech-lab",
-      userType: "Studentas",
       start: "12:00",
       duration: 20,
       status: "Patvirtinta",
@@ -87,21 +79,13 @@ const defaultState = {
   ],
 };
 
-function loadState() {
-  const savedState = localStorage.getItem(storageKey);
-
-  if (!savedState) {
-    return structuredClone(defaultState);
-  }
-
-  return JSON.parse(savedState);
-}
-
-const state = loadState();
-
-function saveState() {
-  localStorage.setItem(storageKey, JSON.stringify(state));
-}
+const talksList = document.querySelector("#talksList");
+const partnersList = document.querySelector("#partnersList");
+const speakerQuestions = document.querySelector("#speakerQuestions");
+const partnerRequests = document.querySelector("#partnerRequests");
+const moderatorFeed = document.querySelector("#moderatorFeed");
+const talkTemplate = document.querySelector("#talkCardTemplate");
+const partnerTemplate = document.querySelector("#partnerCardTemplate");
 
 function findTalk(talkId) {
   return talks.find((talk) => talk.id === talkId);
@@ -147,13 +131,6 @@ function createActivityItem({ title, meta, body, answer, actions }) {
   return article;
 }
 
-function createEmptyState(message) {
-  const empty = document.createElement("p");
-  empty.className = "empty-state";
-  empty.textContent = message;
-  return empty;
-}
-
 function createAnswerForm({ label, value, submitText, onSubmit }) {
   const form = document.createElement("form");
   form.className = "inline-action";
@@ -165,7 +142,7 @@ function createAnswerForm({ label, value, submitText, onSubmit }) {
   textarea.name = "answer";
   textarea.rows = 2;
   textarea.required = true;
-  textarea.value = value.startsWith("Laukia") ? "" : value;
+  textarea.value = value === "Pranešėjas atsakys iki pranešimo arba po jo." || value === "Partneris atsakys artimiausiu metu." ? "" : value;
   textarea.placeholder = "Įrašykite atsakymą";
   field.append(textarea);
 
@@ -192,8 +169,7 @@ function createReservationActions(reservation) {
   approveButton.textContent = "Patvirtinti laiką";
   approveButton.addEventListener("click", () => {
     reservation.status = "Patvirtinta partnerio";
-    saveState();
-    renderPartnerRequests();
+    renderDashboards();
   });
 
   const suggestButton = document.createElement("button");
@@ -202,8 +178,7 @@ function createReservationActions(reservation) {
   suggestButton.textContent = "Pasiūlyti kitą laiką";
   suggestButton.addEventListener("click", () => {
     reservation.status = "Partneris pasiūlė kitą laiką";
-    saveState();
-    renderPartnerRequests();
+    renderDashboards();
   });
 
   wrapper.append(approveButton, suggestButton);
@@ -211,13 +186,6 @@ function createReservationActions(reservation) {
 }
 
 function renderTalks() {
-  const talksList = document.querySelector("#talksList");
-  const talkTemplate = document.querySelector("#talkCardTemplate");
-
-  if (!talksList || !talkTemplate) {
-    return;
-  }
-
   talksList.replaceChildren();
 
   talks.forEach((talk) => {
@@ -234,12 +202,11 @@ function renderTalks() {
       const data = new FormData(form);
       state.speakerQuestions.unshift({
         talkId: talk.id,
-        askerType: state.currentUserType,
         question: data.get("question").trim(),
-        answer: "Laukia pranešėjo atsakymo.",
+        answer: "Pranešėjas atsakys iki pranešimo arba po jo.",
       });
-      saveState();
       form.reset();
+      renderDashboards();
     });
 
     talksList.append(card);
@@ -247,13 +214,6 @@ function renderTalks() {
 }
 
 function renderPartners() {
-  const partnersList = document.querySelector("#partnersList");
-  const partnerTemplate = document.querySelector("#partnerCardTemplate");
-
-  if (!partnersList || !partnerTemplate) {
-    return;
-  }
-
   partnersList.replaceChildren();
 
   partners.forEach((partner) => {
@@ -277,12 +237,11 @@ function renderPartners() {
       const data = new FormData(reservationForm);
       state.reservations.unshift({
         partnerId: partner.id,
-        userType: state.currentUserType,
         start: data.get("start"),
         duration: Number(data.get("duration")),
         status: "Laukia partnerio atsakymo",
       });
-      saveState();
+      renderDashboards();
     });
 
     const questionForm = card.querySelector(".question-form");
@@ -291,12 +250,11 @@ function renderPartners() {
       const data = new FormData(questionForm);
       state.partnerQuestions.unshift({
         partnerId: partner.id,
-        askerType: state.currentUserType,
         question: data.get("question").trim(),
-        answer: "Laukia partnerio atsakymo.",
+        answer: "Partneris atsakys artimiausiu metu.",
       });
-      saveState();
       questionForm.reset();
+      renderDashboards();
     });
 
     partnersList.append(card);
@@ -304,23 +262,12 @@ function renderPartners() {
 }
 
 function renderSpeakerQuestions() {
-  const speakerQuestions = document.querySelector("#speakerQuestions");
-
-  if (!speakerQuestions) {
-    return;
-  }
-
-  if (state.speakerQuestions.length === 0) {
-    speakerQuestions.replaceChildren(createEmptyState("Pranešėjui klausimų dar nėra."));
-    return;
-  }
-
   const items = state.speakerQuestions.map((item) => {
     const talk = findTalk(item.talkId);
     return createActivityItem({
       title: item.question,
-      meta: ["Klausia: " + item.askerType, talk.title, talk.speaker, talk.time],
-      body: "Šį klausimą uždavė naudotojas. Atsakyti gali tik pranešėjas šiame puslapyje.",
+      meta: [talk.title, talk.speaker, talk.time],
+      body: "Pranešėjas mato klausimą ir gali atsakyti iki arba po pranešimo.",
       answer: item.answer,
       actions: createAnswerForm({
         label: "Pranešėjo atsakymas",
@@ -328,23 +275,15 @@ function renderSpeakerQuestions() {
         submitText: "Išsaugoti atsakymą",
         onSubmit: (answer) => {
           item.answer = answer;
-          saveState();
-          renderSpeakerQuestions();
+          renderDashboards();
         },
       }),
     });
   });
-
   speakerQuestions.replaceChildren(...items);
 }
 
 function renderPartnerRequests() {
-  const partnerRequests = document.querySelector("#partnerRequests");
-
-  if (!partnerRequests) {
-    return;
-  }
-
   const items = [];
 
   state.reservations.forEach((reservation) => {
@@ -352,8 +291,8 @@ function renderPartnerRequests() {
     items.push(
       createActivityItem({
         title: `${partner.name}: rezervacija ${reservation.start}`,
-        meta: ["Rezervavo: " + reservation.userType, partner.stand, `${reservation.duration} min.`, reservation.status],
-        body: "Šią rezervaciją sukūrė naudotojas. Patvirtinti ar siūlyti kitą laiką gali tik partneris šiame puslapyje.",
+        meta: [partner.stand, `${reservation.duration} min.`, reservation.status],
+        body: "Partneris gali patvirtinti laiką, pasiūlyti kitą laiką arba atmesti rezervaciją.",
         actions: createReservationActions(reservation),
       }),
     );
@@ -364,8 +303,8 @@ function renderPartnerRequests() {
     items.push(
       createActivityItem({
         title: question.question,
-        meta: ["Klausia: " + question.askerType, partner.name, partner.stand],
-        body: "Šį klausimą uždavė naudotojas. Atsakyti gali tik partneris šiame puslapyje.",
+        meta: [partner.name, partner.stand],
+        body: "Partneris mato klausimą ir gali atsakyti konferencijos platformoje.",
         answer: question.answer,
         actions: createAnswerForm({
           label: "Partnerio atsakymas",
@@ -373,96 +312,47 @@ function renderPartnerRequests() {
           submitText: "Išsaugoti atsakymą",
           onSubmit: (answer) => {
             question.answer = answer;
-            saveState();
-            renderPartnerRequests();
+            renderDashboards();
           },
         }),
       }),
     );
   });
 
-  if (items.length === 0) {
-    partnerRequests.replaceChildren(createEmptyState("Partneriui klausimų ar rezervacijų dar nėra."));
-    return;
-  }
-
   partnerRequests.replaceChildren(...items);
 }
 
 function renderModeratorFeed() {
-  const moderatorFeed = document.querySelector("#moderatorFeed");
-
-  if (!moderatorFeed) {
-    return;
-  }
-
-  const speakerItems = state.speakerQuestions.map((item) => {
-    const talk = findTalk(item.talkId);
-    return createActivityItem({
-      title: item.question,
-      meta: ["Pranešėjui", "Klausia: " + item.askerType, talk.speaker, talk.title],
-      body: "Moderatorius mato naudotojo klausimą pranešėjui ir pranešėjo atsakymą, bet čia negali atsakyti.",
-      answer: item.answer,
-    });
-  });
-
-  const partnerQuestionItems = state.partnerQuestions.map((item) => {
-    const partner = findPartner(item.partnerId);
-    return createActivityItem({
-      title: item.question,
-      meta: ["Partneriui", "Klausia: " + item.askerType, partner.name],
-      body: "Moderatorius mato naudotojo klausimą partneriui ir partnerio atsakymą, bet čia negali atsakyti.",
-      answer: item.answer,
-    });
-  });
-
-  const reservationItems = state.reservations.map((reservation) => {
-    const partner = findPartner(reservation.partnerId);
-    return createActivityItem({
-      title: `${partner.name}: rezervacija ${reservation.start}`,
-      meta: ["Rezervacija", "Rezervavo: " + reservation.userType, `${reservation.duration} min.`, reservation.status],
-      body: "Moderatorius mato naudotojo rezervaciją ir partnerio sprendimą, bet čia negali keisti rezervacijos.",
-    });
-  });
-
-  const items = [...speakerItems, ...partnerQuestionItems, ...reservationItems];
-
-  if (items.length === 0) {
-    moderatorFeed.replaceChildren(createEmptyState("Moderatoriui dar nėra ką peržiūrėti."));
-    return;
-  }
+  const items = [
+    ...state.speakerQuestions.map((item) => {
+      const talk = findTalk(item.talkId);
+      return createActivityItem({
+        title: item.question,
+        meta: ["Pranešėjui", talk.speaker, talk.title],
+        body: "Moderatorius mato klausimą ir atsakymą.",
+        answer: item.answer,
+      });
+    }),
+    ...state.partnerQuestions.map((item) => {
+      const partner = findPartner(item.partnerId);
+      return createActivityItem({
+        title: item.question,
+        meta: ["Partneriui", partner.name],
+        body: "Moderatorius mato partneriui užduotą klausimą ir atsakymą.",
+        answer: item.answer,
+      });
+    }),
+  ];
 
   moderatorFeed.replaceChildren(...items);
 }
 
-function setupUserTypeSelect() {
-  const userTypeSelect = document.querySelector("#userTypeSelect");
-
-  if (!userTypeSelect) {
-    return;
-  }
-
-  userTypeSelect.value = state.currentUserType;
-  userTypeSelect.addEventListener("change", (event) => {
-    state.currentUserType = event.target.value;
-    saveState();
-  });
-}
-
-if (pageRole === "naudotojas") {
-  setupUserTypeSelect();
-  renderTalks();
-  renderPartners();
-}
-
-if (pageRole === "pranesejas") {
+function renderDashboards() {
   renderSpeakerQuestions();
-}
-
-if (pageRole === "partneris") {
   renderPartnerRequests();
-}
-
-if (pageRole === "moderatorius") {
   renderModeratorFeed();
 }
+
+renderTalks();
+renderPartners();
+renderDashboards();
